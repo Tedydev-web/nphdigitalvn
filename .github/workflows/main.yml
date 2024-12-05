@@ -1,0 +1,29 @@
+name: NPH Digital Deplotment
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Deploy using ssh
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: 22
+        script: |
+          cd /var/www/nphdigital.vn/nphcom
+          echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S -v
+          if [ $? -eq 0 ]; then
+            echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S git pull origin
+            # echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S npm install
+            echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S npm run build
+            pm2 reload nphdigital
+          else
+            echo "Mật khẩu sudo không chính xác."
+            exit 1
+          fi
